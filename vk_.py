@@ -5,11 +5,15 @@ import file_proc
 from file_proc import read_config
 
 
-# def send_hi():
-#     message = ''
-#     users = file_proc.read_users(['steam', 'telegram', 'twitch', 'на_стриме_банды'])
-#     for user_id in users:
-#         send_with_keyboard(message=message, user_id=user_id)
+def send_hi():
+    message = 'Релиз очередного обновления 😎\n\n- Добавил уведомления YouTube (основной и Лайв каналы)\nИногда (скорее даже часто) Youtube ' \
+              'либо сильно опаздывает с уведомлениями, либо вообще не присылает их. Тут вы будете получать их с ' \
+              'задержкой в 2 секунды. По умолчанию вы подписаны(!). Отписаться можно как и раньше - по кнопке ниже\n\n'\
+              '- Различные исправления и оптимизации\n\n P.S. Если у вас есть идеи/предложения по боту - смело пишите ' \
+              'мне в лс (найти можно в контактах группы)'
+    users = file_proc.read_users(['steam', 'telegram', 'twitch', 'на_стриме_банды', 'youtube'])
+    for user_id in users:
+        send_with_keyboard(message=message, user_id=user_id)
 
 
 def vk_auth():
@@ -82,19 +86,28 @@ def create_keyboard(user_id):
     else:
         keyboard.add_button('Подписаться на Steam', color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
+
     if user_id in data['twitch']:
         keyboard.add_button('Отписаться от Twitch', color=VkKeyboardColor.NEGATIVE)
     else:
         keyboard.add_button('Подписаться на Twitch', color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
+
     if user_id in data['на_стриме_банды']:
         keyboard.add_button('Отписаться от На_стриме_банды', color=VkKeyboardColor.NEGATIVE)
     else:
         keyboard.add_button('Подписаться на На_стриме_банды', color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
+
     if user_id in data['telegram']:
         keyboard.add_button('Отписаться от Telegram', color=VkKeyboardColor.NEGATIVE)
     else:
         keyboard.add_button('Подписаться на Telegram', color=VkKeyboardColor.POSITIVE)
+    keyboard.add_line()
+
+    if user_id in data['youtube']:
+        keyboard.add_button('Отписаться от YouTube', color=VkKeyboardColor.NEGATIVE)
+    else:
+        keyboard.add_button('Подписаться на YouTube', color=VkKeyboardColor.POSITIVE)
 
     return keyboard.get_keyboard()
