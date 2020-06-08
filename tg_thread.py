@@ -1,8 +1,10 @@
 import os
+from time import time, sleep, ctime
 
 from telethon import connection
 from telethon.sync import TelegramClient, events
 
+import file_proc
 import vk_
 from file_proc import read_config
 
@@ -67,4 +69,9 @@ def start_tg():
             os.remove(file)  # Удаляем уже ненужный файл
             print(f'Photo "{file}" deleted')
 
-    client.run_until_disconnected()
+    try:
+        client.run_until_disconnected()
+    except Exception as exception:
+        file_proc.error_log(str(exception) + '| TG')
+        print(exception, ctime(time()), 'TG')
+        sleep(600)

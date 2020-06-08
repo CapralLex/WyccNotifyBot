@@ -10,6 +10,7 @@ def tw_auth():
 
 
 def twitch(game):
+    # Чекаем игры всех стримеров на совпадение с игрой Шусса
     streamers = read_config('twitch', 'streamers', list_=True)
     twitch_client = tw_auth()
     streamers = twitch_client.users.translate_usernames_to_ids(streamers)

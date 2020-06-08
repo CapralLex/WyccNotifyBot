@@ -16,7 +16,6 @@ def vk_lp_auth():
 
 def start_longpoll():
     available_commands = file_proc.read_users(raw=True).keys()
-    print(available_commands)
     try:
         longpoll = vk_lp_auth()
         for event in longpoll.listen():
@@ -48,14 +47,17 @@ def start_longpoll():
                     vk_.send_once(user_id=event.user_id, message=message)
 
                 elif len(text) == 3 and text[2] in available_commands:
+                    test_time = time()
                     if text[0] == 'подписаться' and text[1] == 'на':
                         file_proc.write_users(user=event.user_id, category=text[2])
                         vk_.send_with_keyboard(user_id=event.user_id,
                                                message=f'Теперь вы подписаны на уведомления {text[2]}')
+                        print(f'{event.user_id} subscribed on {text[2]}. Complete in {time()-test_time}')
                     elif text[0] == 'отписаться' and text[1] == 'от':
                         file_proc.delete_users(user=event.user_id, category=text[2])
                         vk_.send_with_keyboard(user_id=event.user_id,
                                                message=f'Теперь вы отписаны от уведомлений {text[2]}')
+                        print(f'{event.user_id} unsubscribed from {text[2]}. Complete in {time()-test_time}')
 
                 else:
                     vk_.send_once(user_id=event.user_id, message='Неизвестная команда 😕')

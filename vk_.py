@@ -37,7 +37,8 @@ def send_once(user_id, message):
 
 def send_with_keyboard(user_id, message):
     vk = vk_auth()
-    vk.messages.send(user_id=user_id, message=message, keyboard=create_keyboard(user_id), random_id=0)
+    keyboard = create_keyboard(user_id)
+    vk.messages.send(user_id=user_id, message=message, keyboard=keyboard, random_id=0)
 
 
 def send_with_time(game, secs, exit_status):
