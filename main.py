@@ -2,6 +2,7 @@ from threading import Thread
 
 import longpoll_thread
 import steam_thread
+import tg_thread
 import twitch_thread
 import yt_thread
 
@@ -18,4 +19,4 @@ if __name__ == "__main__":
     Thread(target=yt_thread.start_yt).start()
     print('YouTube thread running')
 
-    # tg_thread.start_tg()
+    tg_thread.start_tg()

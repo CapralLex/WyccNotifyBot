@@ -1,4 +1,6 @@
-from vk_api import VkApi, VkUpload
+from time import time, ctime
+
+from vk_api import VkApi, VkUpload, exceptions
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 import file_proc
@@ -6,12 +8,9 @@ from file_proc import read_config
 
 
 def send_hi():
-    message = 'Релиз очередного обновления 😎\n\n- Добавил уведомления YouTube (основной и Лайв каналы)\nИногда (скорее даже часто) Youtube ' \
-              'либо сильно опаздывает с уведомлениями, либо вообще не присылает их. Тут вы будете получать их с ' \
-              'задержкой в 2 секунды. По умолчанию вы подписаны(!). Отписаться можно как и раньше - по кнопке ниже\n\n'\
-              '- Различные исправления и оптимизации\n\n P.S. Если у вас есть идеи/предложения по боту - смело пишите ' \
-              'мне в лс (найти можно в контактах группы)'
+    message = '123'
     users = file_proc.read_users(['steam', 'telegram', 'twitch', 'на_стриме_банды', 'youtube'])
+    print(users)
     for user_id in users:
         send_with_keyboard(message=message, user_id=user_id)
 
@@ -31,18 +30,30 @@ def vk_auth_upload():
 def send(message, category):
     vk = vk_auth()
     users = file_proc.read_users(category)
-    vk.messages.send(user_ids=users, message=message, random_id=0)
+    try:
+        vk.messages.send(user_ids=users, message=message, random_id=0)
+    except exceptions.VkApiError as exception:
+        file_proc.error_log(str(exception) + '| VK(send)')
+        print(exception, ctime(time()), 'VK(send)')
 
 
 def send_once(user_id, message):
     vk = vk_auth()
-    vk.messages.send(user_id=user_id, message=message, random_id=0)
+    try:
+        vk.messages.send(user_id=user_id, message=message, random_id=0)
+    except exceptions.VkApiError as exception:
+        file_proc.error_log(str(exception) + '| VK(send_once)')
+        print(exception, ctime(time()), 'VK(send_once)')
 
 
 def send_with_keyboard(user_id, message):
     vk = vk_auth()
     keyboard = create_keyboard(user_id)
-    vk.messages.send(user_id=user_id, message=message, keyboard=keyboard, random_id=0)
+    try:
+        vk.messages.send(user_id=user_id, message=message, keyboard=keyboard, random_id=0)
+    except exceptions.VkApiError as exception:
+        file_proc.error_log(str(exception) + '| VK(send_keyboard)')
+        print(exception, ctime(time()), 'VK(send_keyboard)')
 
 
 def send_with_time(game, secs, exit_status):
@@ -54,7 +65,12 @@ def send_with_time(game, secs, exit_status):
 
     if exit_status == 'in_offline' or exit_status == 'in_online' or exit_status == 'in_other_game':
         message = f'Шусс играл в {game}. Сессия длилась {hm}'
-        vk.messages.send(user_ids=users, message=message, random_id=0)
+        try:
+            vk.messages.send(user_ids=users, message=message, random_id=0)
+        except exceptions.VkApiError as exception:
+            file_proc.error_log(str(exception) + '| VK(send_timer)')
+            print(exception, ctime(time()), 'VK(send_timer)')
+
         print(f'Wycc played in {game}. Session time: {hm}')
 
 
@@ -64,7 +80,12 @@ def send_photo(file, message):
     upload = vk_auth_upload()
     ready_file = upload.photo_messages(photos=file)
     attach = f'photo{ready_file[0]["owner_id"]}_{ready_file[0]["id"]}'
-    vk.messages.send(user_ids=users, message=message, attachment=attach, random_id=0)
+    try:
+        vk.messages.send(user_ids=users, message=message, attachment=attach, random_id=0)
+    except exceptions.VkApiError as exception:
+        file_proc.error_log(str(exception) + '| VK(send_photo)')
+        print(exception, ctime(time()), 'VK(send_photo)')
+
     print('Photo send successfully')
 
 
@@ -74,7 +95,12 @@ def send_doc(file, message):
     upload = vk_auth_upload()
     ready_file = upload.document_message(doc=file, title=file, peer_id=154348822)
     attach = f'doc{ready_file["doc"]["owner_id"]}_{ready_file["doc"]["id"]}'
-    vk.messages.send(user_ids=users, message=message, attachment=attach, random_id=0)
+    try:
+        vk.messages.send(user_ids=users, message=message, attachment=attach, random_id=0)
+    except exceptions.VkApiError as exception:
+        file_proc.error_log(str(exception) + '| VK(send_doc)')
+        print(exception, ctime(time()), 'VK(send_doc)')
+
     print('Doc send successfully')
 
 

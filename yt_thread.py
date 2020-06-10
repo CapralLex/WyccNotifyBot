@@ -35,7 +35,7 @@ def to_send(title, link, index):
 
 def start_yt():
     # n = 1
-    last_videos_ids = [None, None]
+    last_videos_ids = [[None], [None]]
     channels = file_proc.read_config('youtube', 'channels', list_=True)
 
     while True:
@@ -51,12 +51,13 @@ def start_yt():
             video_id, title, link = processing(response)
 
             # Это нужно, чтобы при запуске бота он не отправлял последнее видео
-            if last_videos_ids[index] is None:
-                last_videos_ids[index] = video_id
+            if last_videos_ids[index][0] is None:
+                last_videos_ids[index][0] = video_id
+                continue
 
-            if last_videos_ids[index] != video_id:
+            if video_id not in last_videos_ids[index]:
                 to_send(title, link, index)
-                last_videos_ids[index] = video_id
+                last_videos_ids[index].append(video_id)
 
         # n += 1
         # print('\n')
