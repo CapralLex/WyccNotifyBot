@@ -30,8 +30,10 @@ def processing(data):
     for entry in xml.findall('{http://www.w3.org/2005/Atom}entry'):
         video_id = entry.find('{http://www.youtube.com/xml/schemas/2015}videoId').text
         title = entry.find('{http://www.w3.org/2005/Atom}title').text
-        link = entry.find('{http://www.w3.org/2005/Atom}link_TEST').attrib['href']
+        link = entry.find('{http://www.w3.org/2005/Atom}link').attrib['href']
         result.append([video_id, title, link])
+
+    result.reverse()
     return result
 
 
@@ -55,8 +57,6 @@ def start_yt():
         for item in items:
             last_videos_ids[channel].append(item[0])
 
-        last_videos_ids[channel].reverse()  # Разворачиваем список, чтобы последние видео были в конце
-
     while True:
         for channel_index, channel in enumerate(channels):
             response = req(url=f'https://www.youtube.com/feeds/videos.xml?channel_id={channel}')
@@ -74,7 +74,9 @@ def start_yt():
             for item in items:
                 if item[0] not in last_videos_ids[channel]:
                     to_send(title=item[1], link=item[2], index=channel_index)
-                    last_videos_ids[channel].pop(0)
                     last_videos_ids[channel].append(item[0])
+
+                    if len(last_videos_ids[channel]) > 50:
+                        last_videos_ids[channel].pop(0)
 
             sleep(2)
