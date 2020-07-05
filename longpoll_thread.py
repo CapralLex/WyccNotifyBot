@@ -3,9 +3,9 @@ from time import sleep, ctime, time
 from vk_api import VkApi
 from vk_api.longpoll import VkLongPoll, VkEventType
 
-import file_proc
+import file_handler
 import vk_
-from file_proc import read_config
+from file_handler import read_config
 
 
 def vk_lp_auth():
@@ -15,7 +15,7 @@ def vk_lp_auth():
 
 
 def start_longpoll():
-    available_commands = file_proc.read_users(raw=True).keys()
+    available_commands = file_handler.read_users(raw=True).keys()
     try:
         longpoll = vk_lp_auth()
         for event in longpoll.listen():
@@ -25,7 +25,7 @@ def start_longpoll():
                 text = str(event.text).lower().split(' ')
 
                 if text[0] == 'начать':
-                    write_status = file_proc.write_users(user=event.user_id, category='all')
+                    write_status = file_handler.write_users(user=event.user_id, category='all')
                     if write_status:
                         message = 'Ты подписался на мои уведомления 😎\n\nЧтобы настроить уведомления - воспользуйся ' \
                                   'моей клавиатурой. \n\nЕсли твое приложение не поддерживает клавитуру - отправь ' \
@@ -51,12 +51,12 @@ def start_longpoll():
                 elif len(text) == 3 and text[2] in available_commands:
                     test_time = time()
                     if text[0] == 'подписаться' and text[1] == 'на':
-                        file_proc.write_users(user=event.user_id, category=text[2])
+                        file_handler.write_users(user=event.user_id, category=text[2])
                         vk_.send_with_keyboard(user_id=event.user_id,
                                                message=f'Теперь вы подписаны на уведомления {text[2]}')
                         print(f'{event.user_id} subscribed on {text[2]}. Complete in {time()-test_time}')
                     elif text[0] == 'отписаться' and text[1] == 'от':
-                        file_proc.delete_users(user=event.user_id, category=text[2])
+                        file_handler.delete_users(user=event.user_id, category=text[2])
                         vk_.send_with_keyboard(user_id=event.user_id,
                                                message=f'Теперь вы отписаны от уведомлений {text[2]}')
                         print(f'{event.user_id} unsubscribed from {text[2]}. Complete in {time()-test_time}')
@@ -65,7 +65,7 @@ def start_longpoll():
                     vk_.send_once(user_id=event.user_id, message='Неизвестная команда 😕')
 
     except Exception as exception:
-        file_proc.error_log(str(exception) + '| LONGPOLL')
+        file_handler.error_log(str(exception) + '| LONGPOLL')
         print(exception, ctime(time()), 'LONGPOLL')
         sleep(120)
         start_longpoll()

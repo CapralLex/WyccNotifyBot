@@ -1,6 +1,6 @@
 from time import ctime, time, sleep
 
-import file_proc
+import file_handler
 import twitch_
 import vk_
 
@@ -15,7 +15,7 @@ def start_twitch():
 
             if not already_live and wycc_live is not None:
                 print('Wycc twitch online!')
-                file_proc.wycc_log('start_stream')
+                file_handler.wycc_log('start_stream')
                 already_live = True
                 vk_.send(message='Wycc подрубил стрим\ntwitch.tv/elwycco', category='twitch')
                 sleep(1800)
@@ -27,7 +27,7 @@ def start_twitch():
             sleep(2)
 
     except Exception as exception:
-        file_proc.error_log(str(exception) + '| TWITCH')
+        file_handler.error_log(str(exception) + '| TWITCH')
         print(exception, ctime(time()), 'TWITCH')
         sleep(120)
         start_twitch()

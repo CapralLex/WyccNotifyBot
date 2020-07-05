@@ -3,7 +3,7 @@ from time import sleep, time, ctime
 
 import requests as r
 
-import file_proc
+import file_handler
 import vk_
 
 
@@ -12,7 +12,7 @@ def req(url):
         response = r.get(url).text
         return response
     except r.exceptions.RequestException as exception:
-        file_proc.error_log(str(exception) + '| YT(req)')
+        file_handler.error_log(str(exception) + '| YT(req)')
         print(exception, ctime(time()), '| YT(req)')
         return None
 
@@ -23,7 +23,7 @@ def processing(data):
     try:
         xml = ET.fromstring(data)
     except Exception as exception:
-        file_proc.error_log(str(exception) + '| YT(xml)')
+        file_handler.error_log(str(exception) + '| YT(xml)')
         print(exception, ctime(time()), '| YT(req)')
         return None
 
@@ -45,7 +45,7 @@ def to_send(title, link, index):
 
 
 def start_yt():
-    channels = file_proc.read_config('youtube', 'channels', list_=True)
+    channels = file_handler.read_config('youtube', 'channels', list_=True)
     last_videos_ids = dict()
 
     # Первоначальное заполнение video_id

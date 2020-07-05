@@ -2,10 +2,10 @@ from time import time, ctime, sleep
 
 from requests import get
 
-import file_proc
+import file_handler
 import twitch_
 import vk_
-from file_proc import read_config
+from file_handler import read_config
 
 
 def start_steam():
@@ -15,9 +15,9 @@ def start_steam():
     timer_started = None
     timer_status = False
     already_with_streamer = False
+    wycc_id = read_config('steam', 'wycc_id')
 
     while True:
-        wycc_id = read_config('steam', 'wycc_id')
         bad_games = read_config('steam', 'bad_games', list_=True)
 
         try:
@@ -25,7 +25,7 @@ def start_steam():
                     f'{steam_key}&steamids={wycc_id}')
             req_proc = r.json()['response']['players'][0]
         except Exception as exception:
-            file_proc.error_log(str(exception) + ' | STEAM')
+            file_handler.error_log(str(exception) + ' | STEAM')
             print(exception, ctime(time()), 'STEAM')
             sleep(120)
             continue
@@ -35,16 +35,16 @@ def start_steam():
         # Если профиль Steam закрыт
         if req_visible == '1':
             # Если в конфиге значение другое
-            if req_visible != file_proc.read_config('data', 'visible_status'):
-                file_proc.write_config('data', 'visible_status', '1')
+            if req_visible != file_handler.read_config('data', 'visible_status'):
+                file_handler.write_config('data', 'visible_status', '1')
                 vk_.send(message='Шусс закрыл свой профиль Steam 😕', category=['steam', 'на_стриме_банды'])
                 print('visible_status in config.ini was changed to 1')
             sleep(3600)
             continue
 
         # Если профиль открыт и в конфиге значение отличается
-        elif req_visible == '3' and req_visible != file_proc.read_config('data', 'visible_status'):
-            file_proc.write_config('data', 'visible_status', '3')
+        elif req_visible == '3' and req_visible != file_handler.read_config('data', 'visible_status'):
+            file_handler.write_config('data', 'visible_status', '3')
             vk_.send(message='Шусс открыл свой профиль Steam 😎', category=['steam', 'на_стриме_банды'])
             print('visible_status in config.ini was changed to 3')
 
@@ -54,7 +54,7 @@ def start_steam():
 
             # log
             if status != 'offline':
-                file_proc.wycc_log('offline')
+                file_handler.wycc_log('offline')
                 print(f'Wycc Steam now is offline ({ctime(time())})')
 
             # TODO: Убрать постоянное обновление переменных
@@ -76,7 +76,7 @@ def start_steam():
 
             # log
             if status != 'online':
-                file_proc.wycc_log('online')
+                file_handler.wycc_log('online')
                 print(f'Wycc Steam now is online ({ctime(time())})')
 
             status = 'online'
@@ -104,7 +104,7 @@ def start_steam():
             if status != game:  # Если новая игра
 
                 # log
-                file_proc.wycc_log(f'game: {game}')
+                file_handler.wycc_log(f'game: {game}')
                 print(f'Wycc Steam now in {game} ({ctime(time())})')
 
                 if not timer_status:  # Если таймер выкл

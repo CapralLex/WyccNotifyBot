@@ -4,9 +4,9 @@ from time import time, sleep, ctime
 from telethon import connection
 from telethon.sync import TelegramClient, events
 
-import file_proc
+import file_handler
 import vk_
-from file_proc import read_config
+from file_handler import read_config
 
 
 def start_tg():
@@ -72,6 +72,6 @@ def start_tg():
     try:
         client.run_until_disconnected()
     except Exception as exception:
-        file_proc.error_log(str(exception) + '| TG')
+        file_handler.error_log(str(exception) + '| TG')
         print(exception, ctime(time()), 'TG')
         sleep(600)

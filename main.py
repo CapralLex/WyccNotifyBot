@@ -1,7 +1,7 @@
 from threading import Thread
 from time import time, ctime, sleep
 
-import file_proc
+import file_handler
 import longpoll_thread
 import steam_thread
 import tg_thread
@@ -27,7 +27,7 @@ def start():
         tg_thread.start_tg()
 
     except Exception as exception:
-        file_proc.error_log(str(exception) + '| MAIN_STARTER')
+        file_handler.error_log(str(exception) + '| MAIN_STARTER')
         print(exception, ctime(time()), 'MAIN_STARTER')
         sleep(120)
         start()

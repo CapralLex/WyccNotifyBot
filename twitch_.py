@@ -1,7 +1,7 @@
 from twitch import TwitchClient
 
-import file_proc
-from file_proc import read_config
+import file_handler
+from file_handler import read_config
 
 
 def tw_auth():
@@ -18,5 +18,5 @@ def twitch(game):
         streamer_live = twitch_client.streams.get_stream_by_user(channel_id=streamer['id'])
         if streamer_live is not None and streamer_live['game'] == game:
             streamer_name = streamer_live['channel']['display_name']
-            file_proc.wycc_log(f'with_twitch {streamer_name} {game}')
+            file_handler.wycc_log(f'with_twitch {streamer_name} {game}')
             return streamer_name

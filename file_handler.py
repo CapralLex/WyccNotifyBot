@@ -3,19 +3,28 @@ import json
 from time import strftime, localtime, time
 
 
-def read_users(category=None, raw=False):
+def read_users(category=None, raw=False, separated=False):
     with open('users.json', 'r', encoding='UTF-8') as file:
         data = json.load(file)
 
-    if raw:  # Если нужно отдать только сырые данные
-        return data
+    if separated and category:
+        users = list()
+        full_list = data[category]
+        # full_list = ['test_id'+str(_) for _ in range(1, 1+1)]
 
-    if type(category) is list:  # Если передали список категорий
+        for index in range(len(full_list)//100+1):
+            users.append(full_list[index*100:index*100+100])
+
+    elif type(category) is list:  # Если передали список категорий
         users = []
         for key in category:  # Для каждого элемента категории
             for _ in data[key]:  # Для каждого юзера категории
                 if _ not in users:  # Если еще не записали
                     users.append(_)
+
+    elif raw:  # Если нужно отдать только сырые данные
+        return data
+
     else:
         users = data[category]
 
