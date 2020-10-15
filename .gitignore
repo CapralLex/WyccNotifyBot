@@ -6,3 +6,4 @@
 *.session-journal
 __pycache__/
 .idea/
+venv/

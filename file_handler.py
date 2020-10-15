@@ -53,7 +53,7 @@ def write_users(user, category):
 
     if checker:  # Если мы вносили изменение в файл - записываем и возвращаем True
         with open('users.json', 'w', encoding='UTF-8') as file:
-            json.dump(data, file, indent=1)
+            json.dump(data, file, ensure_ascii=False, indent=1)
         return True
     else:
         return False
