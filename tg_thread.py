@@ -30,7 +30,7 @@ def start_tg():
         client = TelegramClient('wycc_parser', api_id, api_hash)
 
     client.start()
-    logger.debug('Telegram thread running')
+    print('Telegram thread running')
 
     def callback(current, total):
         print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))

@@ -60,7 +60,7 @@ def send_with_time(game, secs, exit_status):
     vk = vk_auth()
     h = secs // 3600
     m = (secs-h*3600)//60
-    hm = f'{h}ч. {m}м.'
+    hm = f'{h}h. {m}m.'
     users = file_handler.read_users(category='steam', separated=True)
 
     if exit_status == 'in_offline' or exit_status == 'in_online' or exit_status == 'in_other_game':

@@ -22,16 +22,16 @@ def restart_thread(err_thread, thread_name):
 
 def start_all_threads():
     Thread(target=longpoll_thread.start_longpoll).start()
-    logger.debug('Longpoll thread running')
+    print('Longpoll thread running')
 
     Thread(target=steam_thread.start_steam).start()
-    logger.debug('Steam thread running')
+    print('Steam thread running')
 
     Thread(target=twitch_thread.start_twitch).start()
-    logger.debug('Twitch thread running')
+    print('Twitch thread running')
 
     Thread(target=yt_thread.start_yt).start()
-    logger.debug('Youtube thread running')
+    print('Youtube thread running')
 
     tg_thread.start_tg()
 
