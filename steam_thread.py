@@ -1,13 +1,15 @@
-from time import time, ctime, sleep
+from time import time, sleep
 
+from loguru import logger
 from requests import get
 
-import file_handler
-import twitch_
+import main
+import twitch_thread
 import vk_
-from file_handler import read_config
+from file_handler import read_config, write_config
 
 
+@logger.catch(onerror=lambda _: main.restart_thread(start_steam, 'longpoll'))
 def start_steam():
     steam_key = read_config('steam', 'key')
     status = 'NO_STATUS'
@@ -25,9 +27,8 @@ def start_steam():
                     f'{steam_key}&steamids={wycc_id}')
             req_proc = r.json()['response']['players'][0]
         except Exception as exception:
-            file_handler.error_log(str(exception) + ' | STEAM')
-            print(exception, ctime(time()), 'STEAM')
-            sleep(120)
+            logger.error(f'{exception} | STEAM_T')
+            sleep(int(read_config('data', 'delay')))
             continue
 
         req_visible = str(req_proc['communityvisibilitystate'])
@@ -35,18 +36,18 @@ def start_steam():
         # Если профиль Steam закрыт
         if req_visible == '1':
             # Если в конфиге значение другое
-            if req_visible != file_handler.read_config('data', 'visible_status'):
-                file_handler.write_config('data', 'visible_status', '1')
+            if req_visible != read_config('data', 'visible_status'):
+                write_config('data', 'visible_status', '1')
                 vk_.send(message='Шусс закрыл свой профиль Steam 😕', category=['steam', 'на_стриме_банды'])
-                print('visible_status in config.ini was changed to 1')
+                logger.warning('Visible_status in config.ini was changed to 1')
             sleep(3600)
             continue
 
         # Если профиль открыт и в конфиге значение отличается
-        elif req_visible == '3' and req_visible != file_handler.read_config('data', 'visible_status'):
-            file_handler.write_config('data', 'visible_status', '3')
+        elif req_visible == '3' and req_visible != read_config('data', 'visible_status'):
+            write_config('data', 'visible_status', '3')
             vk_.send(message='Шусс открыл свой профиль Steam 😎', category=['steam', 'на_стриме_банды'])
-            print('visible_status in config.ini was changed to 3')
+            logger.warning('Visible_status in config.ini was changed to 3')
 
         req_status = req_proc['personastate']  # 0 offline, 1-6 online
 
@@ -54,8 +55,7 @@ def start_steam():
 
             # log
             if status != 'offline':
-                file_handler.wycc_log('offline')
-                print(f'Wycc Steam now is offline ({ctime(time())})')
+                logger.info('Wycc Steam now is offline')
 
             # TODO: Убрать постоянное обновление переменных
             status = 'offline'
@@ -76,8 +76,7 @@ def start_steam():
 
             # log
             if status != 'online':
-                file_handler.wycc_log('online')
-                print(f'Wycc Steam now is online ({ctime(time())})')
+                logger.info('Wycc Steam now is online')
 
             status = 'online'
             already_with_streamer = False
@@ -104,8 +103,7 @@ def start_steam():
             if status != game:  # Если новая игра
 
                 # log
-                file_handler.wycc_log(f'game: {game}')
-                print(f'Wycc Steam now in {game} ({ctime(time())})')
+                logger.info(f'Wycc Steam now in {game}')
 
                 if not timer_status:  # Если таймер выкл
                     timer_started = time()  # Засекаем начало отсчета
@@ -127,16 +125,11 @@ def start_steam():
 
                 # Проверка на совместный стрим
                 if not already_with_streamer:
-                    with_streamer = twitch_.twitch(game)
+                    with_streamer = twitch_thread.get_good_streamers(game)
                     if with_streamer is not None:
                         message = f'Возможно Шусс и {with_streamer} играют вместе в {game} на стриме' \
                                   f'\n\ntwitch.tv/{with_streamer.lower()}'
                         vk_.send(message, category='на_стриме_банды')
                         already_with_streamer = True
-
-                if not timer_status:
-                    print('! WAR: Wycc STILL playing, but timer isn`t active !')
-
-                # print('Wycc STILL playing '+game)
 
             sleep(30)

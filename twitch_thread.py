@@ -1,33 +1,71 @@
-from time import ctime, time, sleep
+from time import sleep
 
-import file_handler
-import twitch_
+from loguru import logger
+from twitch import TwitchClient
+
+import main
 import vk_
+from file_handler import read_config
 
 
+def tw_auth():
+    twitch_client = TwitchClient(client_id=read_config('twitch', 'client_id'))
+    return twitch_client
+
+
+def get_good_streamers(game):
+    # Чекаем игры всех стримеров на совпадение с игрой Шусса
+    streamer_names = read_config('twitch', 'streamers', list_=True)
+    twitch_client = tw_auth()
+    streamers = twitch_client.users.translate_usernames_to_ids(streamer_names)
+    for streamer in streamers:
+        streamer_live = twitch_client.streams.get_stream_by_user(channel_id=streamer['id'])
+        if streamer_live is not None and streamer_live['game'] == game:
+            streamer_name = streamer_live['channel']['display_name']
+            logger.info(f'with_twitch {streamer_name} {game}')
+            return streamer_name
+
+
+@logger.catch(onerror=lambda _: main.restart_thread(start_twitch, 'twitch'))
 def start_twitch():
-    twitch_client = twitch_.tw_auth()
+    twitch_client = tw_auth()
     already_live = False
+    bad_games = read_config('twitch', 'bad_games')
+    wycc_id = read_config('twitch', 'wycc_id')
+    game = str()
 
     try:
         while True:
-            wycc_live = twitch_client.streams.get_stream_by_user(94849379)
+            wycc_live = twitch_client.streams.get_stream_by_user(wycc_id)
 
-            if not already_live and wycc_live is not None:
-                print('Wycc twitch online!')
-                file_handler.wycc_log('start_stream')
-                already_live = True
-                vk_.send(message='Wycc подрубил стрим\ntwitch.tv/elwycco', category='twitch')
-                sleep(1800)
+            if wycc_live is not None:
+                current_game = wycc_live['game']
+
+                if not already_live:
+
+                    logger.info('Wycc twitch online')
+
+                    already_live = True
+                    vk_.send(message='Wycc подрубил стрим\ntwitch.tv/elwycco', category='twitch')
+                    sleep(15)
+
+                elif already_live:
+
+                    if current_game != game and current_game.lower() not in bad_games:
+                        message = f'Текущая игра на стриме: {current_game}'
+                        vk_.send(message=message, category='twitch_games')
+                        logger.info(f'Wycc streaming game changed to {current_game}')
+                        game = current_game
+
             elif already_live and wycc_live is None:
-                print('Wycc twitch offline')
+                logger.info('Wycc twitch offline')
                 already_live = False
+                game = ''
                 sleep(15)
 
             sleep(2)
 
     except Exception as exception:
-        file_handler.error_log(str(exception) + '| TWITCH')
-        print(exception, ctime(time()), 'TWITCH')
-        sleep(120)
+        logger.error(f'{exception} | TWITCH_T')
+        sleep(int(read_config('data', 'delay')))
         start_twitch()

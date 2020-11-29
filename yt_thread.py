@@ -1,82 +1,67 @@
-import xml.etree.ElementTree as ET
-from time import sleep, time, ctime
+import re
+from time import sleep
 
-import requests as r
+import requests as req
+from loguru import logger
 
-import file_handler
+import main
 import vk_
+from file_handler import read_config
+
+re_titles = r'(?<=}]},"title":{"runs":\[{"text":").*?(?="}])'
+re_videos = r'(?<={"gridVideoRenderer":{"videoId":").*?(?=")'
 
 
-def req(url):
-    try:
-        response = r.get(url).text
-        return response
-    except r.exceptions.RequestException as exception:
-        file_handler.error_log(str(exception) + '| YT(req)')
-        print(exception, ctime(time()), '| YT(req)')
-        return None
-
-
-def processing(data):
-    result = list()
-
-    try:
-        xml = ET.fromstring(data)
-    except Exception as exception:
-        file_handler.error_log(str(exception) + '| YT(xml)')
-        print(exception, ctime(time()), '| YT(req)')
-        return None
-
-    for entry in xml.findall('{http://www.w3.org/2005/Atom}entry'):
-        video_id = entry.find('{http://www.youtube.com/xml/schemas/2015}videoId').text
-        title = entry.find('{http://www.w3.org/2005/Atom}title').text
-        link = entry.find('{http://www.w3.org/2005/Atom}link').attrib['href']
-        result.append([video_id, title, link])
-
-    result.reverse()
-    return result
-
-
-def to_send(title, link, index):
+def to_send(title, video_id, index):
     channel = 'основном' if index == 0 else 'втором'
+    link = f'https://youtu.be/{video_id}'
     message = f'Новое видео на {channel} канале:\n\n"{title}"\n{link}'
     vk_.send(message=message, category='youtube')
-    print(f'New youtube video send successfully! {link}')
+    logger.debug(f'New youtube video send successfully! {link}')
 
 
+def get_videos(channel_id):
+    url = f'https://youtube.com/channel/{channel_id}/videos'
+
+    page = req.get(url).text
+
+    video_ids = re.findall(re_videos, page, re.MULTILINE)
+    video_ids.reverse()
+    video_titles = re.findall(re_titles, page, re.MULTILINE)
+    video_titles.reverse()
+
+    return video_ids, video_titles
+
+
+@logger.catch(onerror=lambda _: main.restart_thread(start_yt, 'youtube'))
 def start_yt():
-    channels = file_handler.read_config('youtube', 'channels', list_=True)
-    last_videos_ids = dict()
+    channels = read_config('youtube', 'channels', list_=True)
+    last_video_ids = dict()
 
     # Первоначальное заполнение video_id
     for index, channel in enumerate(channels):
         # Сколько каналов в конфиге, столько и ключей словаря. Затем к ключу с id канала добавим id каждого видео
-        last_videos_ids.update({channel: list()})
-        response = req(url=f'https://www.youtube.com/feeds/videos.xml?channel_id={channel}')
-        items = processing(response)
-        for item in items:
-            last_videos_ids[channel].append(item[0])
+        video_ids, _ = get_videos(channel)
+        last_video_ids.update({channel: video_ids})
 
-    while True:
-        for channel_index, channel in enumerate(channels):
-            response = req(url=f'https://www.youtube.com/feeds/videos.xml?channel_id={channel}')
+    try:
+        while True:
+            for channel_index, channel in enumerate(channels):
+                new_video_ids, new_video_titles = get_videos(channel)
 
-            if response is None:
-                sleep(15)
-                continue
+                for video_index, new_video_id in enumerate(new_video_ids):
 
-            items = processing(response)
+                    if new_video_id not in last_video_ids[channel]:
+                        to_send(title=new_video_titles[video_index], video_id=new_video_id, index=channel_index)
 
-            if items is None:
-                sleep(15)
-                continue
+                        # Добавляем новое видео и удаляем последнее, чтобы осталось прежнее количество
+                        last_video_ids[channel].append(new_video_id)
+                        if len(last_video_ids[channel]) >= 40:
+                            last_video_ids[channel].pop(0)
 
-            for item in items:
-                if item[0] not in last_videos_ids[channel]:
-                    to_send(title=item[1], link=item[2], index=channel_index)
-                    last_videos_ids[channel].append(item[0])
+                sleep(2.5)
 
-                    if len(last_videos_ids[channel]) > 50:
-                        last_videos_ids[channel].pop(0)
-
-            sleep(2)
+    except Exception as exception:
+        logger.error(f'{exception} | YOUTUBE_T')
+        sleep(int(read_config('data', 'delay')))
+        start_yt()

@@ -1,14 +1,16 @@
 import os
-from time import time, sleep, ctime
+from time import sleep
 
+from loguru import logger
 from telethon import connection
 from telethon.sync import TelegramClient, events
 
-import file_handler
+import main
 import vk_
 from file_handler import read_config
 
 
+@logger.catch(onerror=lambda _: main.restart_thread(start_tg, 'telegram'))
 def start_tg():
     channel = read_config('telegram', 'channel')
     api_id = read_config('telegram', 'api_id')
@@ -28,7 +30,7 @@ def start_tg():
         client = TelegramClient('wycc_parser', api_id, api_hash)
 
     client.start()
-    print('Telegram thread running')
+    logger.debug('Telegram thread running')
 
     def callback(current, total):
         print('Downloaded', current, 'out of', total, 'bytes: {:.2%}'.format(current / total))
@@ -42,21 +44,20 @@ def start_tg():
 
         if vk_message != '':
             vk_.send(message=f'{message_to_send}\n\n"{vk_message}"', category='telegram')
-            print('Telegram txt post send successfully')
 
         if vk_media is not None:
             file = await client.download_media(message=event.message, progress_callback=callback)
-            mediatype = vk_media['_']
-            if mediatype == 'MessageMediaPhoto':
+            media_type = vk_media['_']
+            if media_type == 'MessageMediaPhoto':
                 vk_.send_photo(file, message_to_send)
 
-            elif mediatype == 'MessageMediaDocument':
+            elif media_type == 'MessageMediaDocument':
                 if '.tgs' not in file and 'sticker' not in file:
                     vk_.send_doc(file, message_to_send)
                 else:
-                    print('Warning: sticker')
+                    logger.warning('Telegram sticker detected')
 
-            elif mediatype == 'MessageMediaPoll':
+            elif media_type == 'MessageMediaPoll':
                 poll_title = vk_media['poll']['question']
                 answers = []
                 for ans in vk_media['poll']['answers']:
@@ -67,11 +68,9 @@ def start_tg():
                 vk_.send(message=quiz_message, category='telegram')
 
             os.remove(file)  # Удаляем уже ненужный файл
-            print(f'Photo "{file}" deleted')
 
     try:
         client.run_until_disconnected()
     except Exception as exception:
-        file_handler.error_log(str(exception) + '| TG')
-        print(exception, ctime(time()), 'TG')
-        sleep(600)
+        logger.error(f'{exception} | TG_T')
+        sleep(int(read_config('data', 'delay')))

@@ -1,18 +1,9 @@
-from time import time, ctime
-
 from vk_api import VkApi, VkUpload, exceptions
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 import file_handler
 from file_handler import read_config
-
-
-def send_hi():
-    message = '123'
-    users = file_handler.read_users(['steam', 'telegram', 'twitch', 'на_стриме_банды', 'youtube'])
-    print(users)
-    for user_id in users:
-        send_with_keyboard(message=message, user_id=user_id)
+from longpoll_thread import logger
 
 
 def vk_auth():
@@ -35,8 +26,7 @@ def send(message, category):
             vk.messages.send(user_ids=list_of_users, message=message, random_id=0)
             # print(f'Отправка сообщения: {list_of_users = }, {len(list_of_users) = }')
         except exceptions.VkApiError as exception:
-            file_handler.error_log(str(exception) + '| VK(send)')
-            print(exception, ctime(time()), 'VK(send)')
+            logger.error(f'{exception} | VK(send)')
 
 
 def send_once(user_id, message):
@@ -44,8 +34,17 @@ def send_once(user_id, message):
     try:
         vk.messages.send(user_id=user_id, message=message, random_id=0)
     except exceptions.VkApiError as exception:
-        file_handler.error_log(str(exception) + '| VK(send_once)')
-        print(exception, ctime(time()), 'VK(send_once)')
+        logger.error(f'{exception} | VK(send_once)')
+
+
+def send_emergency(thread, delay):
+    vk = vk_auth()
+    admins = read_config('data', 'admins', list_=True)
+    message = f'ЧП: Аварийная остановка потока {thread}. Попытка автоматического перезапуска через {delay} секунд...'
+    try:
+        vk.messages.send(user_ids=admins, message=message, random_id=0)
+    except exceptions.VkApiError as exception:
+        logger.error(f'{exception} | VK(send_once)')
 
 
 def send_with_keyboard(user_id, message):
@@ -54,8 +53,7 @@ def send_with_keyboard(user_id, message):
     try:
         vk.messages.send(user_id=user_id, message=message, keyboard=keyboard, random_id=0)
     except exceptions.VkApiError as exception:
-        file_handler.error_log(str(exception) + '| VK(send_keyboard)')
-        print(exception, ctime(time()), 'VK(send_keyboard)')
+        logger.error(f'{exception} | VK(send_keyboard)')
 
 
 def send_with_time(game, secs, exit_status):
@@ -71,10 +69,9 @@ def send_with_time(game, secs, exit_status):
             try:
                 vk.messages.send(user_ids=list_of_users, message=message, random_id=0)
             except exceptions.VkApiError as exception:
-                file_handler.error_log(str(exception) + '| VK(send_timer)')
-                print(exception, ctime(time()), 'VK(send_timer)')
+                logger.error(f'{exception} | VK(send_timer)')
 
-        print(f'Wycc played in {game}. Session time: {hm}')
+        logger.info(f'Wycc played in {game}. Session time: {hm}')
 
 
 def send_photo(file, message):
@@ -87,10 +84,9 @@ def send_photo(file, message):
         try:
             vk.messages.send(user_ids=list_of_users, message=message, attachment=attach, random_id=0)
         except exceptions.VkApiError as exception:
-            file_handler.error_log(str(exception) + '| VK(send_photo)')
-            print(exception, ctime(time()), 'VK(send_photo)')
+            logger.error(f'{exception} | VK(send_photo)')
 
-    print('Photo send successfully')
+    logger.info('Photo send successfully')
 
 
 def send_doc(file, message):
@@ -103,10 +99,22 @@ def send_doc(file, message):
         try:
             vk.messages.send(user_ids=list_of_users, message=message, attachment=attach, random_id=0)
         except exceptions.VkApiError as exception:
-            file_handler.error_log(str(exception) + '| VK(send_doc)')
-            print(exception, ctime(time()), 'VK(send_doc)')
+            logger.error(f'{exception} | VK(send_doc)')
 
-    print('Doc send successfully')
+    logger.info('Doc send successfully')
+
+
+def send_doc_once(file, message, user_id):
+    vk = vk_auth()
+    upload = vk_auth_upload()
+    ready_file = upload.document_message(doc=file, title=file, peer_id=154348822)
+    attach = f'doc{ready_file["doc"]["owner_id"]}_{ready_file["doc"]["id"]}'
+    try:
+        vk.messages.send(user_id=user_id, message=message, attachment=attach, random_id=0)
+    except exceptions.VkApiError as exception:
+        logger.error(f'{exception} | VK(send_doc)')
+
+    logger.info('Doc send successfully')
 
 
 def create_keyboard(user_id):
@@ -122,6 +130,12 @@ def create_keyboard(user_id):
         keyboard.add_button('Отписаться от Twitch', color=VkKeyboardColor.NEGATIVE)
     else:
         keyboard.add_button('Подписаться на Twitch', color=VkKeyboardColor.POSITIVE)
+    keyboard.add_line()
+
+    if user_id in data['twitch_games']:
+        keyboard.add_button('Отписаться от Twitch_games', color=VkKeyboardColor.NEGATIVE)
+    else:
+        keyboard.add_button('Подписаться на Twitch_games', color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
 
     if user_id in data['на_стриме_банды']:

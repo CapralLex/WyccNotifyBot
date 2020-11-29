@@ -1,8 +1,10 @@
 import configparser
 import json
-from time import strftime, localtime, time
+
+from loguru import logger
 
 
+# Получает всех юзеров одной категории
 def read_users(category=None, raw=False, separated=False):
     with open('users.json', 'r', encoding='UTF-8') as file:
         data = json.load(file)
@@ -31,6 +33,28 @@ def read_users(category=None, raw=False, separated=False):
     return users
 
 
+# Получает всех озеров из всех категорий без повторений
+def get_all_users():
+    output = dict()
+    all_users = list()
+
+    with open('users.json', 'r', encoding='UTF-8') as file:
+        data = json.load(file)
+
+    for category in data:
+        num = 0
+        [all_users.append(_) for _ in data[category] if _ not in all_users]
+
+        for _ in data[category]:
+            num += 1
+
+        output.update({category: num})
+
+    output.update({'all': len(all_users)})
+    print(output)
+    return output
+
+
 def write_users(user, category):
     checker = False  # Чекер нужен для проверки, вносили ли мы изменения в файл или нет
     with open('users.json', 'r', encoding='UTF-8') as file:
@@ -42,14 +66,14 @@ def write_users(user, category):
                 data[key].append(user)
                 checker = True
             else:
-                print(f'WAR: Category already contains a user {user} (all)')
+                logger.error(f'WAR: Category already contains a user {user} (all)')
 
     else:
         if user not in data[category]:
             data[category].append(user)
             checker = True
         else:
-            print(f'WAR: Category already contains a user {user} (ones)')
+            logger.error(f'WAR: Category already contains a user {user} (ones)')
 
     if checker:  # Если мы вносили изменение в файл - записываем и возвращаем True
         with open('users.json', 'w', encoding='UTF-8') as file:
@@ -70,14 +94,14 @@ def delete_users(user, category):
                 data[key].remove(user)
                 checker = True
             else:
-                print(f'WAR: Category does not contain user {user} (all)')
+                logger.error(f'WAR: Category does not contain user {user} (all)')
 
     else:
         if user in data[category]:
             data[category].remove(user)
             checker = True
         else:
-            print(f'WAR: Category does not contain user {user} (ones)')
+            logger.error(f'WAR: Category does not contain user {user} (ones)')
 
     if checker:  # Если мы вносили изменение в файл - записываем и возвращаем True
         with open('users.json', 'w', encoding='UTF-8') as file:
@@ -85,18 +109,6 @@ def delete_users(user, category):
         return True
     else:
         return False
-
-
-def wycc_log(action):
-    with open('wycc.log', 'a', encoding='UTF-8') as logfile:
-        action_time = strftime('%x %X', localtime(time()))
-        logfile.write(f'{action} | {action_time}\n')
-
-
-def error_log(exception):
-    with open('error.log', 'a', encoding='UTF-8') as logfile:
-        action_time = strftime('%x %X', localtime(time()))
-        logfile.write(f'{exception} | {action_time}\n')
 
 
 def read_config(section, key, list_=False):
