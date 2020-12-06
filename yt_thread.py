@@ -35,6 +35,9 @@ def get_videos(channel_id):
 
 @logger.catch(onerror=lambda _: main.restart_thread(start_yt, 'youtube'))
 def start_yt():
+
+    print('Youtube thread running')
+
     channels = read_config('youtube', 'channels', list_=True)
     last_video_ids = dict()
 
@@ -54,14 +57,13 @@ def start_yt():
                     if new_video_id not in last_video_ids[channel]:
                         to_send(title=new_video_titles[video_index], video_id=new_video_id, index=channel_index)
 
-                        # Добавляем новое видео и удаляем последнее, чтобы осталось прежнее количество
                         last_video_ids[channel].append(new_video_id)
-                        if len(last_video_ids[channel]) >= 40:
-                            last_video_ids[channel].pop(0)
 
                 sleep(2.5)
 
     except Exception as exception:
+        restart_timer = int(read_config('data', 'delay'))
         logger.error(f'{exception} | YOUTUBE_T')
-        sleep(int(read_config('data', 'delay')))
+        print(f'Restart after {restart_timer} (yt) seconds ...')
+        sleep(restart_timer)
         start_yt()

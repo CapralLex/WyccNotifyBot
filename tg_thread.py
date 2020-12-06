@@ -72,5 +72,8 @@ def start_tg():
     try:
         client.run_until_disconnected()
     except Exception as exception:
+        restart_timer = int(read_config('data', 'delay'))
         logger.error(f'{exception} | TG_T')
-        sleep(int(read_config('data', 'delay')))
+        print(f'Restart after {restart_timer} seconds (tg) ...')
+        sleep(restart_timer)
+

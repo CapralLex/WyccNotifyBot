@@ -60,7 +60,7 @@ def send_with_time(game, secs, exit_status):
     vk = vk_auth()
     h = secs // 3600
     m = (secs-h*3600)//60
-    hm = f'{h}h. {m}m.'
+    hm = f'{h}ч. {m}м.'
     users = file_handler.read_users(category='steam', separated=True)
 
     if exit_status == 'in_offline' or exit_status == 'in_online' or exit_status == 'in_other_game':
@@ -71,7 +71,7 @@ def send_with_time(game, secs, exit_status):
             except exceptions.VkApiError as exception:
                 logger.error(f'{exception} | VK(send_timer)')
 
-        logger.info(f'Wycc played in {game}. Session time: {hm}')
+        logger.info(f'Wycc played in {game}. Session time: {h}ч. {m}м.')
 
 
 def send_photo(file, message):
@@ -87,6 +87,12 @@ def send_photo(file, message):
             logger.error(f'{exception} | VK(send_photo)')
 
     logger.info('Photo send successfully')
+
+
+def send_photo_once(user_id, photo_link, message):
+    vk = vk_auth()
+    vk.messages.send(user_id=user_id, message=message, attachment=photo_link, random_id=0)
+    logger.info('Photo send successfully (once)')
 
 
 def send_doc(file, message):
@@ -130,12 +136,6 @@ def create_keyboard(user_id):
         keyboard.add_button('Отписаться от Twitch', color=VkKeyboardColor.NEGATIVE)
     else:
         keyboard.add_button('Подписаться на Twitch', color=VkKeyboardColor.POSITIVE)
-    keyboard.add_line()
-
-    if user_id in data['twitch_games']:
-        keyboard.add_button('Отписаться от Twitch_games', color=VkKeyboardColor.NEGATIVE)
-    else:
-        keyboard.add_button('Подписаться на Twitch_games', color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
 
     if user_id in data['на_стриме_банды']:

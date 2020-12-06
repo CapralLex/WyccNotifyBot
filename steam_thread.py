@@ -11,6 +11,9 @@ from file_handler import read_config, write_config
 
 @logger.catch(onerror=lambda _: main.restart_thread(start_steam, 'longpoll'))
 def start_steam():
+
+    print('Steam thread running')
+
     steam_key = read_config('steam', 'key')
     status = 'NO_STATUS'
     game = 'NO_GAME'
@@ -27,8 +30,10 @@ def start_steam():
                     f'{steam_key}&steamids={wycc_id}')
             req_proc = r.json()['response']['players'][0]
         except Exception as exception:
+            restart_timer = int(read_config('data', 'delay'))
             logger.error(f'{exception} | STEAM_T')
-            sleep(int(read_config('data', 'delay')))
+            print(f'Сontinue after {restart_timer} seconds (steam) ...')
+            sleep(restart_timer)
             continue
 
         req_visible = str(req_proc['communityvisibilitystate'])

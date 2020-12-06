@@ -15,19 +15,25 @@ def tw_auth():
 
 def get_good_streamers(game):
     # Чекаем игры всех стримеров на совпадение с игрой Шусса
+    game = game.replace(':', '')  # Некоторые игры в стиме и твитче называются по разному
     streamer_names = read_config('twitch', 'streamers', list_=True)
     twitch_client = tw_auth()
     streamers = twitch_client.users.translate_usernames_to_ids(streamer_names)
     for streamer in streamers:
         streamer_live = twitch_client.streams.get_stream_by_user(channel_id=streamer['id'])
-        if streamer_live is not None and streamer_live['game'] == game:
-            streamer_name = streamer_live['channel']['display_name']
-            logger.info(f'with_twitch {streamer_name} {game}')
-            return streamer_name
+        if streamer_live is not None:
+            streamer_game = streamer_live['game'].replace(':', '')
+            if streamer_game == game:
+                streamer_name = streamer_live['channel']['display_name']
+                logger.info(f'with_twitch {streamer_name} {game}')
+                return streamer_name
 
 
 @logger.catch(onerror=lambda _: main.restart_thread(start_twitch, 'twitch'))
 def start_twitch():
+
+    print('Twitch thread running')
+
     twitch_client = tw_auth()
     already_live = False
     bad_games = read_config('twitch', 'bad_games')
@@ -47,13 +53,13 @@ def start_twitch():
 
                     already_live = True
                     vk_.send(message='Wycc подрубил стрим\ntwitch.tv/elwycco', category='twitch')
-                    sleep(15)
+                    sleep(60)
 
                 elif already_live:
 
                     if current_game != game and current_game.lower() not in bad_games:
                         message = f'Текущая игра на стриме: {current_game}'
-                        vk_.send(message=message, category='twitch_games')
+                        vk_.send(message=message, category='twitch')
                         logger.info(f'Wycc streaming game changed to {current_game}')
                         game = current_game
 
@@ -66,6 +72,8 @@ def start_twitch():
             sleep(2)
 
     except Exception as exception:
+        restart_timer = int(read_config('data', 'delay'))
         logger.error(f'{exception} | TWITCH_T')
-        sleep(int(read_config('data', 'delay')))
+        print(f'Restart after {restart_timer} seconds (twitch) ...')
+        sleep(restart_timer)
         start_twitch()
