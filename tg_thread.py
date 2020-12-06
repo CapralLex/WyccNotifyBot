@@ -40,7 +40,7 @@ def start_tg():
         vk_data = event.message.to_dict()
         vk_message = vk_data['message']
         vk_media = vk_data['media']
-        message_to_send = 'В Telegram канале Шусса новый пост:'
+        message_to_send = 'В Telegram канале Wycc`а новый пост:'
 
         if vk_message != '':
             vk_.send(message=f'{message_to_send}\n\n"{vk_message}"', category='telegram')
@@ -62,7 +62,7 @@ def start_tg():
                 answers = []
                 for ans in vk_media['poll']['answers']:
                     answers.append(ans['text'])
-                quiz_message = f'В Telegram канале Шусса новый опрос:\n\n"{poll_title}"\n'
+                quiz_message = f'В Telegram канале Wycc` новый опрос:\n\n"{poll_title}"\n'
                 for n in range(len(answers)):
                     quiz_message += f'\n{n+1}) {answers[n]}'
                 vk_.send(message=quiz_message, category='telegram')

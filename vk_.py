@@ -64,7 +64,7 @@ def send_with_time(game, secs, exit_status):
     users = file_handler.read_users(category='steam', separated=True)
 
     if exit_status == 'in_offline' or exit_status == 'in_online' or exit_status == 'in_other_game':
-        message = f'Шусс играл в {game}. Сессия длилась {hm}'
+        message = f'Wycc играл в {game}. Сессия длилась {hm}'
         for list_of_users in users:
             try:
                 vk.messages.send(user_ids=list_of_users, message=message, random_id=0)

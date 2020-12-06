@@ -43,7 +43,7 @@ def start_steam():
             # Если в конфиге значение другое
             if req_visible != read_config('data', 'visible_status'):
                 write_config('data', 'visible_status', '1')
-                vk_.send(message='Шусс закрыл свой профиль Steam 😕', category=['steam', 'на_стриме_банды'])
+                vk_.send(message='Wycc закрыл свой профиль Steam 😕', category=['steam', 'на_стриме_банды'])
                 logger.warning('Visible_status in config.ini was changed to 1')
             sleep(3600)
             continue
@@ -51,7 +51,7 @@ def start_steam():
         # Если профиль открыт и в конфиге значение отличается
         elif req_visible == '3' and req_visible != read_config('data', 'visible_status'):
             write_config('data', 'visible_status', '3')
-            vk_.send(message='Шусс открыл свой профиль Steam 😎', category=['steam', 'на_стриме_банды'])
+            vk_.send(message='Wycc открыл свой профиль Steam 😎', category=['steam', 'на_стриме_банды'])
             logger.warning('Visible_status in config.ini was changed to 3')
 
         req_status = req_proc['personastate']  # 0 offline, 1-6 online
@@ -132,7 +132,7 @@ def start_steam():
                 if not already_with_streamer:
                     with_streamer = twitch_thread.get_good_streamers(game)
                     if with_streamer is not None:
-                        message = f'Возможно Шусс и {with_streamer} играют вместе в {game} на стриме' \
+                        message = f'Возможно Wycc и {with_streamer} играют вместе в {game} на стриме' \
                                   f'\n\ntwitch.tv/{with_streamer.lower()}'
                         vk_.send(message, category='на_стриме_банды')
                         already_with_streamer = True

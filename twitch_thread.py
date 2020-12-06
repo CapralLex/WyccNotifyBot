@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, time, ctime, strftime
 
 from loguru import logger
 from twitch import TwitchClient
@@ -14,7 +14,7 @@ def tw_auth():
 
 
 def get_good_streamers(game):
-    # Чекаем игры всех стримеров на совпадение с игрой Шусса
+    # Чекаем игры всех стримеров на совпадение с игрой Wycc`a
     game = game.replace(':', '')  # Некоторые игры в стиме и твитче называются по разному
     streamer_names = read_config('twitch', 'streamers', list_=True)
     twitch_client = tw_auth()
@@ -39,6 +39,7 @@ def start_twitch():
     bad_games = read_config('twitch', 'bad_games')
     wycc_id = read_config('twitch', 'wycc_id')
     game = str()
+    start_stream_timer = None
 
     try:
         while True:
@@ -52,6 +53,7 @@ def start_twitch():
                     logger.info('Wycc twitch online')
 
                     already_live = True
+                    start_stream_timer = time()
                     vk_.send(message='Wycc подрубил стрим\ntwitch.tv/elwycco', category='twitch')
                     sleep(60)
 
@@ -66,8 +68,14 @@ def start_twitch():
             elif already_live and wycc_live is None:
                 logger.info('Wycc twitch offline')
                 already_live = False
+
+                end_stream_timer = int(time() - start_stream_timer)
+                h = end_stream_timer // 3600
+                m = (end_stream_timer - h * 3600) // 60
+
+                vk_.send(message=f'Wycc закончил стрим. Он длился {h}ч. {m}м.\nСледующий стрим через час 🌚', category='twitch')
                 game = ''
-                sleep(15)
+                sleep(60)
 
             sleep(2)
 
