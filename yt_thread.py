@@ -55,8 +55,11 @@ def start_yt():
                 for video_index, new_video_id in enumerate(new_video_ids):
 
                     if new_video_id not in last_video_ids[channel]:
-                        to_send(title=new_video_titles[video_index], video_id=new_video_id, index=channel_index)
+                        video_title = new_video_titles[video_index]
 
+                        video_title = video_title.replace('\\u0026', '&')  # Хардкод фикс M&B
+
+                        to_send(title=video_title, video_id=new_video_id, index=channel_index)
                         last_video_ids[channel].append(new_video_id)
 
                 sleep(2.5)
