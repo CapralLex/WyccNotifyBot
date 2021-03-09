@@ -2,7 +2,7 @@ import os
 from time import sleep, time, ctime
 
 from loguru import logger
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, ReadTimeout
 from vk_api import VkApi
 from vk_api.longpoll import VkLongPoll, VkEventType
 
@@ -10,7 +10,6 @@ import file_handler
 import main
 import vk_
 from file_handler import read_config, write_users
-
 
 MSG_HELLO = '''Теперь ты будешь получать все мои уведомления 😎
     
@@ -91,7 +90,7 @@ def start_longpoll():
                     vk_.send_once(user_id=user_id, message=MSG_HELP)
 
                 elif text[0] == 'енот' and text[1] == 'пидор':
-                    vk_.send_photo_once(user_id=user_id, photo_link='photo-190892622_457239054', message='Вот он - роковой мужчина 😎🤙🏻')
+                    vk_.send_photo_once(user_id=user_id, photo_link='photo-190313507_457239051', message='Вот он - роковой мужчина 😎🤙🏻')
 
                 # --- Админ команды ---
                 elif event.peer_id in admins:
@@ -133,7 +132,7 @@ def start_longpoll():
                     vk_.send_once(user_id=user_id, message='''Неизвестная команда 😕 
                                                             Если что-то непонятно - отправь мне команду "Помощь".''')
 
-    except ConnectionError:
+    except (ConnectionError, ReadTimeout):
         sleep(5)
         start_longpoll()
 

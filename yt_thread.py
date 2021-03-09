@@ -47,6 +47,8 @@ def start_yt():
         video_ids, _ = get_videos(channel)
         last_video_ids.update({channel: video_ids})
 
+# TODO: СДЕЛАТЬ ПРОВЕРКУ ВЕРЕМЕНИ БЛЯТЬ!!
+
     try:
         while True:
             for channel_index, channel in enumerate(channels):
