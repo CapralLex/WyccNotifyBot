@@ -11,6 +11,12 @@ from file_handler import read_config
 re_titles = r'(?<=}]},"title":{"runs":\[{"text":").*?(?="}])'
 re_videos = r'(?<={"gridVideoRenderer":{"videoId":").*?(?=")'
 
+re_date = r'(?<="publishedTimeText":{"simpleText":"\d ).*?(?= ago)'
+list_bad_dates = ['day', 'days', 'week', 'weeks', 'month', 'months', 'year', 'years']
+
+# re_date_ru = r'(?<="publishedTimeText":{"simpleText":"\d ).*?(?= назад)'
+# list_bad_dates_ru = ['день', 'дня', 'дней', 'неделю', 'недели', 'недель', 'месяц', 'месяца', 'месяцей', 'год', 'года', 'лет']
+
 
 def to_send(title, video_id, index):
     channel = 'основном' if index == 0 else 'втором'
@@ -29,8 +35,11 @@ def get_videos(channel_id):
     video_ids.reverse()
     video_titles = re.findall(re_titles, page, re.MULTILINE)
     video_titles.reverse()
+    video_dates = re.findall(re_date, page, re.MULTILINE)
+    # video_dates = re.findall(re_date_ru, page, re.MULTILINE)
+    video_dates.reverse()
 
-    return video_ids, video_titles
+    return video_ids, video_titles, video_dates
 
 
 @logger.catch(onerror=lambda _: main.restart_thread(start_yt, 'youtube'))
@@ -44,19 +53,18 @@ def start_yt():
     # Первоначальное заполнение video_id
     for index, channel in enumerate(channels):
         # Сколько каналов в конфиге, столько и ключей словаря. Затем к ключу с id канала добавим id каждого видео
-        video_ids, _ = get_videos(channel)
+        video_ids, _, _ = get_videos(channel)
         last_video_ids.update({channel: video_ids})
-
-# TODO: СДЕЛАТЬ ПРОВЕРКУ ВЕРЕМЕНИ БЛЯТЬ!!
 
     try:
         while True:
             for channel_index, channel in enumerate(channels):
-                new_video_ids, new_video_titles = get_videos(channel)
+                new_video_ids, new_video_titles, new_video_date = get_videos(channel)
 
                 for video_index, new_video_id in enumerate(new_video_ids):
 
-                    if new_video_id not in last_video_ids[channel]:
+                    # if new_video_id not in last_video_ids[channel] and new_video_date not in list_bad_dates_ru:
+                    if new_video_id not in last_video_ids[channel] and new_video_date not in list_bad_dates:
                         video_title = new_video_titles[video_index]
 
                         video_title = video_title.replace('\\u0026', '&')  # Хардкод фикс M&B

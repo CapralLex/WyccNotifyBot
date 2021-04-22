@@ -66,10 +66,12 @@ def start_longpoll():
                     debug_timer = time()
                     write_status = write_users(user=user_id, category='all')
                     if write_status:
-                        vk_.send_with_keyboard(user_id=user_id, message=MSG_HELLO)
+                        vk_.send_with_keyboard(user_id=user_id, message=MSG_HELLO, keyboard_type='settings')
                         logger.debug(f'{user_id} subscribed to all. Complete in {time() - debug_timer}')
                     else:
-                        vk_.send_with_keyboard(user_id=user_id, message='Ты уже подписан(а) на все уведомления')
+                        vk_.send_with_keyboard(user_id=user_id,
+                                               message='Ты уже подписан(а) на все уведомления',
+                                               keyboard_type='settings')
 
                 # --- main commands ---
                 elif len(text) == 3 and text[2] in available_commands:
@@ -77,20 +79,34 @@ def start_longpoll():
                     if text[0] == 'подписаться' and text[1] == 'на':
                         write_users(user=user_id, category=text[2])
                         vk_.send_with_keyboard(user_id=user_id,
-                                               message=f'Теперь ты будешь получать уведомления {text[2]}')
+                                               message=f'Теперь ты будешь получать уведомления {text[2]}',
+                                               keyboard_type='settings')
                         logger.debug(f'{user_id} subscribed on {text[2]}. Complete in {time()-debug_timer}')
                     elif text[0] == 'отписаться' and text[1] == 'от':
                         file_handler.delete_users(user=user_id, category=text[2])
                         vk_.send_with_keyboard(user_id=user_id,
-                                               message=f'Теперь ты не будешь получать уведомления {text[2]}')
+                                               message=f'Теперь ты не будешь получать уведомления {text[2]}',
+                                               keyboard_type='settings')
                         logger.debug(f'{user_id} unsubscribed from {text[2]}. Complete in {time()-debug_timer}')
 
-                # --- help ---
+                # --- Другие ---
+                elif text[0] == 'настройки':
+                    vk_.send_with_keyboard(user_id=user_id,
+                                           message=f'Меню настроек',
+                                           keyboard_type='settings')
+
+                elif text[0] == 'назад':
+                    vk_.send_with_keyboard(user_id=user_id,
+                                           message=f'Главное меню',
+                                           keyboard_type='main')
+
                 elif text[0] == 'помощь' or text[0] == 'help' or text[0] == 'хелп':
                     vk_.send_once(user_id=user_id, message=MSG_HELP)
 
                 elif text[0] == 'енот' and text[1] == 'пидор':
-                    vk_.send_photo_once(user_id=user_id, photo_link='photo-190313507_457239051', message='Вот он - роковой мужчина 😎🤙🏻')
+                    vk_.send_photo_once(user_id=user_id,
+                                        photo_link='photo-190313507_457239051',
+                                        message='Вот он - роковой мужчина 😎🤙🏻')
 
                 # --- Админ команды ---
                 elif event.peer_id in admins:
@@ -125,12 +141,12 @@ def start_longpoll():
                         vk_.send_once(user_id=user_id, message='Выключение...')
                         os.abort()
 
-                    else:
-                        vk_.send_once(user_id=user_id, message='''Неизвестная команда 😕 
-                                                                Если что-то непонятно - отправь мне команду "Помощь".''')
-                else:
-                    vk_.send_once(user_id=user_id, message='''Неизвестная команда 😕 
-                                                            Если что-то непонятно - отправь мне команду "Помощь".''')
+                #     else:
+                #         vk_.send_once(user_id=user_id, message='''Неизвестная команда 😕
+                #                                                 Если что-то непонятно - отправь мне команду "Помощь".''')
+                # else:
+                #     vk_.send_once(user_id=user_id, message='''Неизвестная команда 😕
+                #                                             Если что-то непонятно - отправь мне команду "Помощь".''')
 
     except (ConnectionError, ReadTimeout):
         sleep(5)

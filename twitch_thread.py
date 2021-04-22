@@ -66,6 +66,8 @@ def start_twitch():
                         vk_.send(message=message, category='twitch')
                         logger.info(f'Wycc streaming game changed to {current_game}')
                         game = current_game
+                    else:
+                        sleep(30)
 
             elif already_live and wycc_live is None:
                 logger.info('Wycc twitch offline')

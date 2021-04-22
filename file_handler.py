@@ -33,7 +33,7 @@ def read_users(category=None, raw=False, separated=False):
     return users
 
 
-# Получает всех озеров из всех категорий без повторений
+# Получает всех юзеров из всех категорий без повторений
 def get_all_users():
     output = dict()
     all_users = list()

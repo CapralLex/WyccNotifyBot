@@ -47,13 +47,27 @@ def send_emergency(thread, delay):
         logger.error(f'{exception} | VK(send_once)')
 
 
-def send_with_keyboard(user_id, message):
+def send_with_keyboard(user_id, message, keyboard_type):
     vk = vk_auth()
-    keyboard = create_keyboard(user_id)
+    if keyboard_type == 'settings':
+        keyboard = create_settings_keyboard(user_id)
+    else:
+        keyboard = main_keyboard_json
     try:
         vk.messages.send(user_id=user_id, message=message, keyboard=keyboard, random_id=0)
     except exceptions.VkApiError as exception:
         logger.error(f'{exception} | VK(send_keyboard)')
+
+
+def update_keyboard_to_all_users(message):
+    vk = vk_auth()
+    keyboard = main_keyboard_json
+    users = file_handler.read_users(category=['steam', 'telegram', 'twitch', 'на_стриме_банды', 'youtube'])
+    for user_id in users:
+        try:
+            vk.messages.send(user_id=user_id, message=message, keyboard=keyboard, random_id=0)
+        except exceptions.VkApiError as exception:
+            logger.error(f'{exception} | VK(send_keyboard)')
 
 
 def send_with_time(game, secs, exit_status):
@@ -123,9 +137,10 @@ def send_doc_once(file, message, user_id):
     logger.info('Doc send successfully')
 
 
-def create_keyboard(user_id):
+def create_settings_keyboard(user_id):
     keyboard = VkKeyboard(one_time=False)
     data = file_handler.read_users(raw=True)
+
     if user_id in data['steam']:
         keyboard.add_button('Отписаться от Steam', color=VkKeyboardColor.NEGATIVE)
     else:
@@ -155,4 +170,14 @@ def create_keyboard(user_id):
     else:
         keyboard.add_button('Подписаться на YouTube', color=VkKeyboardColor.POSITIVE)
 
+    keyboard.add_line()
+    keyboard.add_button('Назад', color=VkKeyboardColor.DEFAULT)
+
     return keyboard.get_keyboard()
+
+
+main_keyboard = VkKeyboard(one_time=False)
+main_keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
+main_keyboard.add_line()
+main_keyboard.add_button('Помощь', color=VkKeyboardColor.PRIMARY)
+main_keyboard_json = main_keyboard.get_keyboard()
