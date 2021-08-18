@@ -15,7 +15,7 @@ def tw_auth():
 
 def get_good_streamers(game):
     # Чекаем игры всех стримеров на совпадение с игрой Wycc`a
-    game = game.replace(':', '')  # Некоторые игры в стиме и твитче называются по разному
+    game = game.replace(':', '').replace('™', '')  # Некоторые игры в стиме и твитче называются по разному
     streamer_names = read_config('twitch', 'streamers', list_=True)
     bad_coop_streaming_games = read_config('twitch', 'bad_coop_streaming_games', list_=True)
 
@@ -24,7 +24,7 @@ def get_good_streamers(game):
     for streamer in streamers:
         streamer_live = twitch_client.streams.get_stream_by_user(channel_id=streamer['id'])
         if streamer_live is not None:
-            streamer_game = streamer_live['game'].replace(':', '')
+            streamer_game = streamer_live['game'].replace(':', '').replace('™', '')
             if streamer_game == game and game not in bad_coop_streaming_games:
                 streamer_name = streamer_live['channel']['display_name']
                 logger.info(f'with_twitch {streamer_name} {game}')
