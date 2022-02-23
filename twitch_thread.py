@@ -1,7 +1,7 @@
 from time import sleep, time
 
 from loguru import logger
-from twitch import TwitchClient
+from twitchAPI.twitch import Twitch
 
 import main
 import vk_
@@ -9,26 +9,26 @@ from file_handler import read_config
 
 
 def tw_auth():
-    twitch_client = TwitchClient(client_id=read_config('twitch', 'client_id'))
+    twitch_client = Twitch(read_config('twitch', 'client_id'), read_config('twitch', 'client_secret_id'))
     return twitch_client
 
 
-def get_good_streamers(game):
-    # Чекаем игры всех стримеров на совпадение с игрой Wycc`a
-    game = game.replace(':', '').replace('™', '')  # Некоторые игры в стиме и твитче называются по разному
+def get_good_streamers(wycc_game):
+    wycc_game = wycc_game.replace(':', '').replace('™', '')  # Некоторые игры в стиме и твитче называются по разному
     streamer_names = read_config('twitch', 'streamers', list_=True)
     bad_coop_streaming_games = read_config('twitch', 'bad_coop_streaming_games', list_=True)
+    streamers_names = []
+    streamers_links = []
 
-    twitch_client = tw_auth()
-    streamers = twitch_client.users.translate_usernames_to_ids(streamer_names)
-    for streamer in streamers:
-        streamer_live = twitch_client.streams.get_stream_by_user(channel_id=streamer['id'])
-        if streamer_live is not None:
-            streamer_game = streamer_live['game'].replace(':', '').replace('™', '')
-            if streamer_game == game and game not in bad_coop_streaming_games:
-                streamer_name = streamer_live['channel']['display_name']
-                logger.info(f'with_twitch {streamer_name} {game}')
-                return streamer_name
+    twitch = tw_auth()
+    streamers_live = twitch.get_streams(user_login=streamer_names)['data']
+    for streamer in streamers_live:
+        streamer_game = streamer['game_name'].replace(':', '').replace('™', '')
+        if streamer_game == wycc_game and wycc_game not in bad_coop_streaming_games:
+            streamers_names.append(streamer['user_name'])
+            streamers_links.append(f"\n\ntwitch.tv/{streamer['user_login']}")
+
+    return streamers_names, streamers_links
 
 
 @logger.catch(onerror=lambda _: main.restart_thread(start_twitch, 'twitch'))
@@ -36,19 +36,18 @@ def start_twitch():
 
     print('Twitch thread running')
 
-    twitch_client = tw_auth()
+    twitch = tw_auth()
     already_live = False
     bad_games = read_config('twitch', 'bad_games')
-    wycc_id = read_config('twitch', 'wycc_id')
     game = str()
     start_stream_timer = None
 
     try:
         while True:
-            wycc_live = twitch_client.streams.get_stream_by_user(wycc_id)
+            wycc_live = twitch.get_streams(user_login=['elwycco'])['data']
 
-            if wycc_live is not None:
-                current_game = wycc_live['game']
+            if len(wycc_live):
+                current_game = wycc_live[0]['game_name']
 
                 if not already_live:
 
