@@ -131,8 +131,8 @@ def start_steam():
                 # Проверка на совместный стрим
                 if not already_with_streamer:
                     streamers_names, streamers_links = twitch_thread.get_good_streamers(game)
-                    if streamers_names is not None:
-                        message = f'Возможно Wycc вместе с {"".join(streamers_names)} играют в {"GTFO"}{"".join(streamers_links)}'
+                    if len(streamers_names):
+                        message = f'Возможно Wycc вместе с {"".join(streamers_names)} играют в {game}{"".join(streamers_links)}'
                         vk_.send(message, category='на_стриме_банды')
                         already_with_streamer = True
 
