@@ -23,7 +23,6 @@ def get_good_streamers(wycc_game):
     twitch = tw_auth()
     streamers_live = twitch.get_streams(user_login=streamer_names)['data']
     for streamer in streamers_live:
-        print(streamer['user_name'], streamer['game_name'])
         streamer_game = streamer['game_name'].replace(':', '').replace('™', '')
         if streamer_game == wycc_game and wycc_game not in bad_coop_streaming_games:
             streamers_names.append(streamer['user_name'])
