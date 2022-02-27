@@ -68,7 +68,7 @@ def start_twitch():
                     else:
                         sleep(30)
 
-            elif already_live and wycc_live is None:
+            elif already_live and not len(wycc_live):
                 logger.info('Wycc twitch offline')
                 already_live = False
 
