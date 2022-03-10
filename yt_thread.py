@@ -1,5 +1,6 @@
 import re
-from time import sleep
+from pprint import pprint
+from time import sleep, time
 
 import requests as req
 from loguru import logger
@@ -11,17 +12,17 @@ from file_handler import read_config
 re_titles = r'(?<=}]},"title":{"runs":\[{"text":").*?(?="}])'
 re_videos = r'(?<={"gridVideoRenderer":{"videoId":").*?(?=")'
 
-re_date = r'(?<="publishedTimeText":{"simpleText":"\d ).*?(?= ago)'
-list_bad_dates = ['day', 'days', 'week', 'weeks', 'month', 'months', 'year', 'years']
+re_date = r'(?<="publishedTimeText":{"simpleText":"\d.).*?(?= ago)'
+# re_date_ru = r'(?<="publishedTimeText":{"simpleText":"\d.).*?(?= назад)'
 
-# re_date_ru = r'(?<="publishedTimeText":{"simpleText":"\d ).*?(?= назад)'
-# list_bad_dates_ru = ['день', 'дня', 'дней', 'неделю', 'недели', 'недель', 'месяц', 'месяца', 'месяцей', 'год', 'года', 'лет']
+list_good_dates = ('minute', 'minutes', 'hour', 'hours', 'second', 'seconds')
+# list_good_dates_ru = ('минуту', 'минут', 'минуты', 'секунд', 'секунду', 'секунды', 'час', 'часа', 'часов')
 
 
 def to_send(title, video_id, index):
     channel = 'основном' if index == 0 else 'втором'
     link = f'https://youtu.be/{video_id}'
-    message = f'Новое видео на {channel} канале:\n\n"{title}"\n{link}'
+    message = f'Новое видео на {channel} канале:\n\n{title}\n\n{link}'
     vk_.send(message=message, category='youtube')
     logger.debug(f'New youtube video send successfully! {link}')
 
@@ -33,10 +34,12 @@ def get_videos(channel_id):
 
     video_ids = re.findall(re_videos, page, re.MULTILINE)
     video_ids.reverse()
+
     video_titles = re.findall(re_titles, page, re.MULTILINE)
     video_titles.reverse()
+
     video_dates = re.findall(re_date, page, re.MULTILINE)
-    # video_dates = re.findall(re_date_ru, page, re.MULTILINE)
+    video_dates = list(map(str.strip, video_dates))  # Убираем лишние пробелы
     video_dates.reverse()
 
     return video_ids, video_titles, video_dates
@@ -63,8 +66,7 @@ def start_yt():
 
                 for video_index, new_video_id in enumerate(new_video_ids):
 
-                    # if new_video_id not in last_video_ids[channel] and new_video_date not in list_bad_dates_ru:
-                    if new_video_id not in last_video_ids[channel] and new_video_date not in list_bad_dates:
+                    if new_video_id not in last_video_ids[channel] and new_video_date[video_index] in list_good_dates:
                         video_title = new_video_titles[video_index]
 
                         video_title = video_title.replace('\\u0026', '&')  # Хардкод фикс M&B

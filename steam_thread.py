@@ -136,4 +136,6 @@ def start_steam():
                         vk_.send(message, category='на_стриме_банды')
                         already_with_streamer = True
 
+                        sleep(300)
+
             sleep(30)
